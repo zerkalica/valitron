@@ -61,7 +61,7 @@ class Validator
 
             // Load language file in directory
             $langDir = static::langDir();
-            static::$_ruleMessages = require rtrim($langDir, '/') . '/' . $lang . '.php';
+            static::$_ruleMessages = array_merge(require rtrim($langDir, '/') . '/' . $lang . '.php', static::$_ruleMessages);
         }
         return static::$_lang;
     }
@@ -80,7 +80,7 @@ class Validator
     /**
      *  Required field validator
      */
-    protected function validateRequired($field, $value)
+    protected function validateRequired($value)
     {
         if (is_null($value)) {
             return false;
@@ -93,12 +93,11 @@ class Validator
     /**
      * Validate that two values match
      *
-     * @param  string  $field
      * @param  mixed   $value
      * @param  array   $params
-     * @return void
+     * @return bool
      */
-    protected function validateEquals($field, $value, array $params)
+    protected function validateEquals($value, array $params)
     {
         $field2 = $params[0];
         return isset($this->_fields[$field2]) && $value == $this->_fields[$field2];
@@ -107,12 +106,11 @@ class Validator
     /**
      * Validate that a field is different from another field
      *
-     * @param  string  $field
      * @param  mixed   $value
      * @param  array   $params
      * @return bool
      */
-    protected function validateDifferent($field, $value, array $params)
+    protected function validateDifferent($value, array $params)
     {
         $field2 = $params[0];
         return isset($this->_fields[$field2]) && $value != $this->_fields[$field2];
@@ -127,7 +125,7 @@ class Validator
      * @param  mixed   $value
      * @return bool
      */
-    protected function validateAccepted($field, $value)
+    protected function validateAccepted($value, $field)
     {
         $acceptable = array('yes', 'on', 1, true);
         return $this->validateRequired($field, $value) && in_array($value, $acceptable, true);
@@ -136,11 +134,10 @@ class Validator
     /**
      * Validate that a field is numeric
      *
-     * @param  string  $field
      * @param  mixed   $value
      * @return bool
      */
-    protected function validateNumeric($field, $value)
+    protected function validateNumeric($value)
     {
         return is_numeric($value);
     }
@@ -148,11 +145,10 @@ class Validator
     /**
      * Validate that a field is an integer
      *
-     * @param  string  $field
      * @param  mixed   $value
      * @return bool
      */
-    protected function validateInteger($field, $value)
+    protected function validateInteger($value)
     {
         return filter_var($value, FILTER_VALIDATE_INT) !== false;
     }
@@ -160,12 +156,11 @@ class Validator
     /**
      * Validate the length of a string
      *
-     * @param  string  $field
      * @param  mixed   $value
      * @param  array   $params
      * @return bool
      */
-    protected function validateLength($field, $value, $params)
+    protected function validateLength($value, $params)
     {
         $length = $this->stringLength($value);
         // Length between
@@ -193,12 +188,11 @@ class Validator
     /**
      * Validate the size of a field is greater than a minimum value.
      *
-     * @param  string  $field
      * @param  mixed   $value
      * @param  array   $params
      * @return bool
      */
-    protected function validateMin($field, $value, $params)
+    protected function validateMin($value, $params)
     {
         return (int) $value >= $params[0];
     }
@@ -206,12 +200,11 @@ class Validator
     /**
      * Validate the size of a field is less than a maximum value
      *
-     * @param  string  $field
      * @param  mixed   $value
      * @param  array   $params
      * @return bool
      */
-    protected function validateMax($field, $value, $params)
+    protected function validateMax($value, $params)
     {
         return (int) $value <= $params[0];
     }
@@ -219,12 +212,11 @@ class Validator
     /**
      * Validate a field is contained within a list of values
      *
-     * @param  string  $field
      * @param  mixed   $value
      * @param  array   $params
      * @return bool
      */
-    protected function validateIn($field, $value, $params)
+    protected function validateIn($value, $params)
     {
         return in_array($value, $params[0]);
     }
@@ -232,25 +224,23 @@ class Validator
     /**
      * Validate a field is not contained within a list of values
      *
-     * @param  string  $field
      * @param  mixed   $value
      * @param  array   $params
      * @return bool
      */
-    protected function validateNotIn($field, $value, $params)
+    protected function validateNotIn($value, $params)
     {
-        return !$this->validateIn($field, $value, $params);
+        return !$this->validateIn($value, $params);
     }
 
     /**
      * Validate a field contains a given string
      *
-     * @param  string $field
      * @param  mixed  $value
      * @param  array  $params
      * @return bool
      */
-    protected function validateContains($field, $value, $params)
+    protected function validateContains($value, $params)
     {
         if (!isset($params[0])) {
             return false;
@@ -264,11 +254,10 @@ class Validator
     /**
      * Validate that a field is a valid IP address
      *
-     * @param  string  $field
      * @param  mixed   $value
      * @return bool
      */
-    protected function validateIp($field, $value)
+    protected function validateIp($value)
     {
         return filter_var($value, FILTER_VALIDATE_IP) !== false;
     }
@@ -276,11 +265,10 @@ class Validator
     /**
      * Validate that a field is a valid e-mail address
      *
-     * @param  string  $field
      * @param  mixed   $value
      * @return bool
      */
-    protected function validateEmail($field, $value)
+    protected function validateEmail($value)
     {
         return filter_var($value, FILTER_VALIDATE_EMAIL) !== false;
     }
@@ -288,11 +276,10 @@ class Validator
     /**
      * Validate that a field is a valid URL by syntax
      *
-     * @param  string  $field
      * @param  mixed   $value
      * @return bool
      */
-    protected function validateUrl($field, $value)
+    protected function validateUrl($value)
     {
         foreach ($this->validUrlPrefixes as $prefix) {
             if (strpos($value, $prefix) !== false) {
@@ -305,11 +292,10 @@ class Validator
     /**
      * Validate that a field is an active URL by verifying DNS record
      *
-     * @param  string  $field
      * @param  mixed   $value
      * @return bool
      */
-    protected function validateUrlActive($field, $value)
+    protected function validateUrlActive($value)
     {
         foreach ($this->validUrlPrefixes as $prefix) {
             if (strpos($value, $prefix) !== false) {
@@ -324,11 +310,10 @@ class Validator
     /**
      * Validate that a field contains only alphabetic characters
      *
-     * @param  string  $field
      * @param  mixed   $value
      * @return bool
      */
-    protected function validateAlpha($field, $value)
+    protected function validateAlpha($value)
     {
         return preg_match('/^([a-z])+$/i', $value);
     }
@@ -336,11 +321,10 @@ class Validator
     /**
      * Validate that a field contains only alpha-numeric characters
      *
-     * @param  string  $field
      * @param  mixed   $value
      * @return bool
      */
-    protected function validateAlphaNum($field, $value)
+    protected function validateAlphaNum($value)
     {
         return preg_match('/^([a-z0-9])+$/i', $value);
     }
@@ -348,11 +332,10 @@ class Validator
     /**
      * Validate that a field contains only alpha-numeric characters, dashes, and underscores
      *
-     * @param  string  $field
      * @param  mixed   $value
      * @return bool
      */
-    protected function validateSlug($field, $value)
+    protected function validateSlug($value)
     {
         return preg_match('/^([-a-z0-9_-])+$/i', $value);
     }
@@ -360,12 +343,11 @@ class Validator
     /**
      * Validate that a field passes a regular expression check
      *
-     * @param  string  $field
      * @param  mixed   $value
      * @param  array   $params
      * @return bool
      */
-    protected function validateRegex($field, $value, $params)
+    protected function validateRegex($value, $params)
     {
         return preg_match($params[0], $value);
     }
@@ -373,11 +355,10 @@ class Validator
     /**
      * Validate that a field is a valid date
      *
-     * @param  string  $field
      * @param  mixed   $value
      * @return bool
      */
-    protected function validateDate($field, $value)
+    protected function validateDate($value)
     {
         return strtotime($value) !== false;
     }
@@ -385,12 +366,11 @@ class Validator
     /**
      * Validate that a field matches a date format
      *
-     * @param  string  $field
      * @param  mixed   $value
      * @param  array   $params
      * @return bool
      */
-    protected function validateDateFormat($field, $value, $params)
+    protected function validateDateFormat($value, $params)
     {
         $parsed = date_parse_from_format($params[0], $value);
 
@@ -400,30 +380,30 @@ class Validator
     /**
      * Validate the date is before a given date
      *
-     * @param  string  $field
      * @param  mixed   $value
      * @param  array   $params
      * @return bool
      */
-    protected function validateDateBefore($field, $value, $params)
+    protected function validateDateBefore($value, $params)
     {
         $vtime = ($value instanceof \DateTime) ? $value->getTimestamp() : strtotime($value);
         $ptime = ($params[0] instanceof \DateTime) ? $params[0]->getTimestamp() : strtotime($params[0]);
+
         return $vtime < $ptime;
     }
 
     /**
      * Validate the date is after a given date
      *
-     * @param  string  $field
      * @param  mixed   $value
      * @param  array   $params
      * @return bool
      */
-    protected function validateDateAfter($field, $value, $params)
+    protected function validateDateAfter($value, $params)
     {
         $vtime = ($value instanceof \DateTime) ? $value->getTimestamp() : strtotime($value);
         $ptime = ($params[0] instanceof \DateTime) ? $params[0]->getTimestamp() : strtotime($params[0]);
+
         return $vtime > $ptime;
     }
 
@@ -502,7 +482,7 @@ class Validator
                     $callback = array($this, 'validate' . ucfirst($v['rule']));
                 }
 
-                $result = call_user_func($callback, $field, $value, $v['params']);
+                $result = call_user_func($callback, $value, $v['params'], $field);
                 if(!$result) {
                     $this->error($field, $v['message'], $v['params']);
                 }
