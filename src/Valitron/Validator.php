@@ -61,9 +61,6 @@ class Validator
 
             // Load language file in directory
             $langDir = static::langDir();
-            if ($langDir) {
-                static::$_ruleMessages = array_merge(require rtrim($langDir, '/') . '/' . $lang . '.php', static::$_ruleMessages);
-            }
         }
         return static::$_lang;
     }
