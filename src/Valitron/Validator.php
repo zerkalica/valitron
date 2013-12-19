@@ -106,7 +106,7 @@ class Validator
     protected function validateEquals($value, array $params)
     {
         $field2 = $params[0];
-        return isset($this->_fields[$field2]) && $value == $this->_fields[$field2];
+        return isset($this->_fields[$field2]) && $value === $this->_fields[$field2];
     }
 
     /**
