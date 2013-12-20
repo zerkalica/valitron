@@ -277,7 +277,15 @@ class Validator
     protected function validateEmail($value)
     {
         $pos = strpos($value, '@');
-        return $pos !== false && ($pos + 1) < $this->stringLength($value);
+        $dotPos = strrpos($value, '.');
+        $len = $this->stringLength($value);
+
+        return
+            $pos !== false
+            && ($pos + 1) < $len
+            && $dotPos !== false
+            && ($dotPos + 1) < $len;
+
         //return filter_var($value, FILTER_VALIDATE_EMAIL) !== false;
     }
 
